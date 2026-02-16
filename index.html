@@ -1,0 +1,704 @@
+
+<html lang="sw">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kavishe Health System - Mfumo Kamili</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 0; background: #e8f5e9; color: #2e7d32; }
+  header { background: linear-gradient(90deg, #2e7d32, #c62828); color: white; padding: 2rem 0 1rem 0; text-align: center; font-size: 2.2rem; font-weight: bold; }
+  .container { max-width: 900px; margin: 2rem auto; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); padding: 2rem; }
+  label { font-weight: bold; margin-top: 1rem; display: block; }
+  input[type=password], input[type=text], textarea, select {
+    width: 100%; padding: 0.7rem 1rem; font-size: 1rem; margin-top: 0.3rem; border: 2px solid #2e7d32;
+    border-radius: 30px; outline: none; transition: border-color 0.3s;
+  }
+  input:focus, textarea:focus, select:focus { border-color: #c62828; }
+  button {
+    background: #2e7d32; color: white; border: none; padding: 0.8rem 2.2rem; border-radius: 30px;
+    cursor: pointer; font-size: 1.1rem; font-weight: bold; margin-top: 1rem; transition: background-color 0.3s;
+  }
+  button:hover { background: #c62828; }
+  .msg { font-weight: bold; margin: 1rem 0 0 0; color: red; }
+  nav {
+    background: #2e7d32; color: white; padding: 1rem 2rem; border-radius: 12px 12px 0 0;
+    font-weight: 700; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center;
+  }
+  #payment-advice {
+    background: #c62828; color: white; margin: 1rem 0; font-weight: bold;
+    border-radius: 30px; padding: 0.7rem 1.1rem; text-align: center;
+  }
+  #drug-list, #chat-messages, #admin-chat-messages, #private-chat-messages {
+    max-height: 230px; overflow-y: auto; background: #f1f8f4;
+    border-radius: 9px; border: 2px solid #c62828; padding: 1rem; margin-bottom: 1rem; white-space: pre-wrap;
+  }
+  #drug-list div {
+    border-bottom: 1px solid #ddd; margin-bottom: 0.6rem; padding-bottom: 0.3rem;
+  }
+  .block-user-list {
+    max-height: 120px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px;
+    background: #fff; padding: 0.3rem; margin-bottom: 1rem;
+  }
+  .block-user-item {
+    display: flex; justify-content: space-between; padding: 0.4rem 0.5rem;
+  }
+  .block-user-item button {
+    margin-left: 8px; border-radius: 15px; font-size: 0.85rem;
+  }
+  #chat-messages div.user-msg,
+  #admin-chat-messages div.sender-user,
+  #private-chat-messages div.sender-user {
+    color: #2e7d32; font-weight: bold; text-align: right; margin-bottom: 0.3rem;
+  }
+  #chat-messages div.bot-msg,
+  #admin-chat-messages div.sender-admin,
+  #private-chat-messages div.sender-admin {
+    color: #c62828; font-weight: bold; text-align: left; margin-bottom: 0.3rem;
+  }
+  .hidden { display: none; }
+  #admin-dashboard, #user-dashboard, #login-section, #register-section, #admin-set-pin-section {
+    display: none;
+  }
+  table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+  table th, table td {
+    border: 1px solid #ccc; padding: 6px 8px; text-align: left;
+  }
+  table th { background-color: #2e7d32; color: white; }
+  img.drug-thumb {
+    width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-bottom: 6px;
+  }
+</style>
+</head>
+<body>
+
+<header>Kavishe Health System</header>
+
+<div id="global-announcement" style="max-width:900px;margin:1.5rem auto;background:#c62828;color:#fff;padding:0.5rem 1rem;border-radius:10px;font-weight:bold;text-align:center;">
+  Malipo ni TZS 5,000 kwa miezi 6. Miezi 2 bure mwanzoni! Lipia kwa namba 0772575860.
+</div>
+
+<!-- Admin Set PIN First Time -->
+<div id="admin-set-pin-section" class="container">
+  <h2>Weka PIN ya Admin (Mara ya Kwanza)</h2>
+  <label>PIN mpya (4-10 digits)</label>
+  <input type="password" id="new-admin-pin" maxlength="10" autocomplete="off" />
+  <label>Thibitisha PIN</label>
+  <input type="password" id="confirm-admin-pin" maxlength="10" autocomplete="off" />
+  <button onclick="setAdminPin()">Weka PIN</button>
+  <div id="set-pin-msg" class="msg"></div>
+</div>
+
+<!-- Register Section -->
+<div id="register-section" class="container">
+  <h2>Jisajili (Mtumiaji Mpya)</h2>
+  <label>PIN itakayotumika kuingia (4-10 digits)</label>
+  <input type="password" id="reg-pin" maxlength="10" />
+  <label>Thibitisha PIN</label>
+  <input type="password" id="reg-pin-confirm" maxlength="10" />
+  <label>Jina lako kamili</label>
+  <input type="text" id="reg-name" maxlength="50" />
+  <label>Namba ya simu</label>
+  <input type="text" id="reg-phone" maxlength="20" placeholder="Mfano: 0712345678" />
+  <button onclick="registerUser()">Jisajili Sasa</button>
+  <div id="reg-msg" class="msg"></div>
+  <div style="margin-top:1rem;">
+    Tayari una akaunti? <a href="#" onclick="showLogin();return false;">Ingia hapa</a>
+  </div>
+</div>
+
+<!-- Login Section -->
+<div id="login-section" class="container">
+  <h2>Ingia Kwenye Mfumo</h2>
+  <button onclick="showRegister()">Jisajili (User mpya)</button>
+  <hr style="margin:1.3rem 0;">
+  <label>Ingia kama admin</label>
+  <input type="password" id="admin-pin" maxlength="10" />
+  <button onclick="loginAdmin()">Ingia Admin</button>
+  <div id="login-admin-msg" class="msg"></div>
+  <label>Ingia kama mtumiaji</label>
+  <input type="password" id="user-pin" maxlength="10" />
+  <button onclick="loginUser()">Ingia Mtumiaji</button>
+  <div id="login-user-msg" class="msg"></div>
+</div>
+
+<!-- Admin Dashboard -->
+<div id="admin-dashboard" class="container">
+  <nav>
+    <div>Admin Dashboard</div>
+    <button onclick="logout()">Toka</button>
+  </nav>
+
+  <h3>Badili PIN ya Admin</h3>
+  <label>PIN ya zamani</label>
+  <input type="password" id="old-admin-pin" maxlength="10" autocomplete="off" />
+  <label>PIN Mpya</label>
+  <input type="password" id="new-admin-pin-change" maxlength="10" autocomplete="off" />
+  <button onclick="changeAdminPin()">Badili PIN</button>
+  <div id="change-pin-msg" class="msg"></div>
+
+  <h3>Andika Tangazo Linaloonekana kwa Watumiaji Wote</h3>
+  <textarea id="announce-box" placeholder="Andika hapa ..."></textarea>
+  <button onclick="saveAnnouncement()">Weka Tangazo</button>
+  <div id="announce-msg" class="msg"></div>
+
+  <h3>Orodha ya Watumiaji</h3>
+  <div id="user-table"></div>
+
+  <h3>Orodha ya Dawa za Asili (<span id="drug-count">0</span>)</h3>
+  <div id="drug-list"></div>
+
+  <h4>Ongeza Dawa nyingi (jina|ugonjwa|kiungo|jinsi ya kuandaa|matumizi|maelezo)</h4>
+  <textarea id="bulk-medicine-box" rows="8" placeholder="Mfano:\nTangawizi|Mafua|Mizizi ya tangawizi|Chemsha vipande 4|Kunywa mara 2|Maelezo"></textarea>
+  <button onclick="addBulkMedicines()">Ongeza Dawa Zote</button>
+  <div id="add-msg" class="msg"></div>
+
+  <h3>Watumiaji Walioblock</h3>
+  <div class="block-user-list" id="blocked-users-list"></div>
+
+  <h3>Chat Group</h3>
+  <div id="admin-chat-messages"></div>
+  <textarea id="admin-chat-input" placeholder="Andika ujumbe..." rows="3"></textarea>
+  <button onclick="sendAdminChat()">Tuma Ujumbe</button>
+
+  <h3>Chat Binafsi na Mtumiaji</h3>
+  <label>Chagua Mtumiaji:</label>
+  <select id="private-chat-user-list" onchange="loadPrivateChat()"></select>
+  <div id="private-chat-messages"></div>
+  <textarea id="private-chat-input" placeholder="Andika ujumbe binafsi..." rows="3"></textarea>
+  <button onclick="sendPrivateChat()">Tuma Ujumbe Binafsi</button>
+</div>
+
+<!-- User Dashboard -->
+<div id="user-dashboard" class="container">
+  <nav>
+    <div>User Dashboard <span id="user-nameshow" style="font-weight:bold;"></span></div>
+    <button onclick="logout()">Toka</button>
+  </nav>
+  <div id="payment-advice"></div>
+  <div style="margin-bottom:1rem;font-weight:bold;">Tangazo la Admin:<br><span id="user-announcement" style="background:#c62828;color:#fff;padding:4px 9px;border-radius:9px;"></span></div>
+  <label>Tafuta dawa au ugonjwa</label>
+  <input type="text" id="user-search" placeholder="Andika hapa..." />
+  <button onclick="userSearch()">Tafuta</button>
+  <button onclick="showAllDrugs()">Orodha Dawa Zote</button>
+  <div id="search-results">Karibu! Tafuta jina la dawa au ugonjwa.</div>
+  <h3>Chat Group</h3>
+  <div id="chat-messages"></div>
+  <textarea id="chat-input" placeholder="Andika ujumbe hapa..." rows="3"></textarea>
+  <button onclick="sendChatMessage()">Tuma Ujumbe</button>
+  <div id="user-payment-message" style="margin-top:1rem; color:gray; font-size:0.95rem;"></div>
+</div>
+
+<script>
+  let adminPin = localStorage.getItem('adminPin') || null;
+  let users = JSON.parse(localStorage.getItem('users')) || {};
+  let drugs = JSON.parse(localStorage.getItem('drugs')) || [
+    {jina:"Tangawizi",magonjwa:"Mafua, tumbo, uchovu",kiungo:"Mizizi ya tangawizi",jinsi_ya_kuandaa:"Chemsha vipande 4 kwenye maji moto",matumizi:"Kunywa kikombe 1 mara 2-3 kwa siku kwa wiki 1",maelezo:"Inasaidia kupunguza maumivu ya tumbo na kuimarisha kinga."},
+    {jina:"Mshubiri",magonjwa:"Vidonda vya tumbo",kiungo:"Majani ya mshubiri",jinsi_ya_kuandaa:"Chagua majani, osha, menya utoe gel na kunywa au pakaa gel kidogo",matumizi:"Kunywa kijiko 1 mara 2 kwa siku kwa wiki 2",maelezo:"Husaidia kuponya vidonda vya tumbo na kupunguza maumivu."}
+  ];
+  let chatMessages = JSON.parse(localStorage.getItem('chatMessages')) || [];
+  let announcement = localStorage.getItem('announcement') || "Malipo ni TZS 5,000 kwa miezi 6. Miezi 2 bure mwanzoni! Lipia kwa namba 0772575860.";
+  let currentUser = null;
+  let currentPrivateChatUser = null;
+
+  const sections = ['admin-set-pin-section', 'login-section', 'register-section', 'admin-dashboard', 'user-dashboard'];
+
+  window.onload = function() {
+    document.getElementById('global-announcement').textContent = announcement;
+    if(!adminPin) {
+      showSection('admin-set-pin-section');
+    } else {
+      showSection('login-section');
+    }
+    document.getElementById('drug-count').textContent = drugs.length;
+  };
+
+  function showSection(id) {
+    sections.forEach(s => document.getElementById(s).style.display = (s === id) ? 'block' : 'none');
+  }
+  function showLogin() { showSection('login-section'); }
+  function showRegister() { showSection('register-section'); }
+
+  function setAdminPin() {
+    let p1 = document.getElementById('new-admin-pin').value.trim();
+    let p2 = document.getElementById('confirm-admin-pin').value.trim();
+    let msg = document.getElementById('set-pin-msg');
+    msg.textContent = "";
+    if(p1.length < 4 || p1.length > 10 || !/^\d+$/.test(p1)) {
+      msg.style.color = 'red'; msg.textContent = 'PIN lazima iwe namba 4-10.';
+      return;
+    }
+    if(p1 !== p2) {
+      msg.style.color = 'red'; msg.textContent = 'PIN na uthibitisho havilingani.';
+      return;
+    }
+    adminPin = p1;
+    localStorage.setItem('adminPin', adminPin);
+    msg.style.color = 'green';
+    msg.textContent = 'PIN imehifadhiwa. Tafadhali ingia!';
+    setTimeout(() => showLogin(), 1800);
+  }
+
+  function registerUser() {
+    let pin = document.getElementById('reg-pin').value.trim();
+    let pinConfirm = document.getElementById('reg-pin-confirm').value.trim();
+    let name = document.getElementById('reg-name').value.trim();
+    let phone = document.getElementById('reg-phone').value.trim();
+    let msg = document.getElementById('reg-msg');
+    msg.textContent = "";
+    if(pin.length < 4 || pin.length > 10 || !/^\d+$/.test(pin)) {
+      msg.style.color = 'red'; msg.textContent = 'PIN lazima iwe namba 4-10.';
+      return;
+    }
+    if(pin !== pinConfirm) {
+      msg.style.color = 'red'; msg.textContent = 'PIN na uthibitisho havilingani.';
+      return;
+    }
+    if(name.length < 2) {
+      msg.style.color = 'red'; msg.textContent = 'Jina lazima liwe la kweli.';
+      return;
+    }
+    if(!/^\d{9,15}$/.test(phone)) {
+      msg.style.color = 'red'; msg.textContent = 'Namba ya simu si sahihi.';
+      return;
+    }
+    if(users[pin]) {
+      msg.style.color = 'red'; msg.textContent = 'PIN tayari imetumika, wasiliana na admin.';
+      return;
+    }
+    let now = new Date();
+    users[pin] = {
+      pin, name, phone,
+      freeUntil: new Date(now.getTime() + 60*24*60*60*1000).toISOString(),
+      paidUntil: null,
+      blocked: false,
+      paidNoticeSent: false
+    };
+    localStorage.setItem('users', JSON.stringify(users));
+    msg.style.color = 'green';
+    msg.textContent = 'Usajili umefanikiwa! Ingia kwa PIN.';
+    setTimeout(() => showLogin(), 1800);
+  }
+
+  function loginAdmin() {
+    let pin = document.getElementById('admin-pin').value.trim();
+    let msg = document.getElementById('login-admin-msg');
+    msg.textContent = "";
+    if(pin === '') {
+      msg.style.color = 'red'; msg.textContent = 'Andika PIN ya admin.';
+      return;
+    }
+    if(pin === adminPin) {
+      currentUser = 'admin';
+      showSection('admin-dashboard');
+      populateDrugList();
+      populateBlockedUsers();
+      populateUserTable();
+      loadChatGroup('admin-chat-messages');
+      populatePrivateChatUsers();
+      document.getElementById('add-msg').textContent = '';
+      document.getElementById('change-pin-msg').textContent = '';
+      document.getElementById('admin-chat-input').value = '';
+      loadAnnouncementAdmin();
+    } else {
+      msg.style.color = 'red'; msg.textContent = 'PIN si sahihi.';
+    }
+  }
+
+  function loginUser() {
+    let pin = document.getElementById('user-pin').value.trim();
+    let msg = document.getElementById('login-user-msg');
+    msg.textContent = "";
+    if(!users[pin]) {
+      msg.style.color = 'red'; msg.textContent = 'PIN haipo. Jisajili kwanza.';
+      return;
+    }
+    let u = users[pin];
+    if(u.blocked) {
+      msg.style.color = 'red'; msg.textContent = 'Akaunti imefungwa. Lipia na wasiliana na admin.';
+      return;
+    }
+    let now = new Date();
+    let freeUntil = new Date(u.freeUntil);
+    let paidUntil = u.paidUntil ? new Date(u.paidUntil) : null;
+    if((paidUntil && now <= paidUntil) || now <= freeUntil){
+      currentUser = pin;
+      showSection('user-dashboard');
+      document.getElementById('user-nameshow').textContent = `(${u.name}, ${u.phone})`;
+      document.getElementById('user-search').value = "";
+      updatePaymentNotice();
+      userShowAnnouncement();
+      showAllDrugs(); // ONYESHA ALL DRUGS ON USER DASHBOARD
+      loadChatGroup('chat-messages');
+      document.getElementById('chat-input').value = '';
+      showPaymentMessageUser();
+    } else {
+      users[pin].blocked = true;
+      localStorage.setItem('users', JSON.stringify(users));
+      msg.style.color = 'red';
+      msg.textContent = 'Miezi yako ya bure imeisha. Tafadhali lipa.';
+    }
+  }
+
+  function logout() {
+    currentUser = null;
+    showLogin();
+    ['admin-pin','user-pin','reg-pin','reg-pin-confirm','reg-name','reg-phone','old-admin-pin','new-admin-pin-change'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.value = '';
+    });
+    ['login-admin-msg','login-user-msg','reg-msg','change-pin-msg','set-pin-msg','add-msg','announce-msg'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = '';
+    });
+  }
+
+  function changeAdminPin() {
+    let oldPin = document.getElementById('old-admin-pin').value.trim();
+    let newPin = document.getElementById('new-admin-pin-change').value.trim();
+    let msg = document.getElementById('change-pin-msg');
+    msg.textContent = "";
+    if(oldPin !== adminPin){
+      msg.style.color = 'red';
+      msg.textContent = 'PIN ya zamani si sahihi.';
+      return;
+    }
+    if(newPin.length<4 || newPin.length>10 || !/^\d+$/.test(newPin)){
+      msg.style.color = 'red';
+      msg.textContent = 'PIN mpya lazima iwe namba 4-10.';
+      return;
+    }
+    adminPin = newPin;
+    localStorage.setItem('adminPin', adminPin);
+    msg.style.color = 'green';
+    msg.textContent = 'PIN imebadilika kikamilifu.';
+    document.getElementById('old-admin-pin').value = '';
+    document.getElementById('new-admin-pin-change').value = '';
+  }
+
+  function populateUserTable() {
+    let html = `<table><tr><th>PIN</th><th>Jina</th><th>Simu</th><th>Status</th><th>Fungia</th><th>Fungua</th><th>Chat</th></tr>`;
+    Object.values(users).forEach(u => {
+      let now = new Date();
+      let status = u.blocked ? '<b style="color:red;">Blocked</b>':
+        (u.paidUntil && now <= new Date(u.paidUntil)) ? '<b style="color:green;">Active</b>':
+        '<span style="color:orange;">Not Paid</span>';
+      html += `<tr>
+        <td>${u.pin}</td><td>${u.name}</td><td>${u.phone}</td><td>${status}</td>
+        <td><button onclick="blockUser('${u.pin}')">Fungia</button></td>
+        <td><button onclick="unblockUser('${u.pin}')">Fungua</button></td>
+        <td><button onclick="startPrivateChat('${u.pin}')">Chat</button></td>
+      </tr>`;
+    });
+    html += '</table>';
+    document.getElementById('user-table').innerHTML = html;
+  }
+
+  function blockUser(pin) {
+    if(users[pin]){
+      users[pin].blocked = true;
+      localStorage.setItem('users', JSON.stringify(users));
+      populateUserTable();
+      populateBlockedUsers();
+    }
+  }
+
+  function unblockUser(pin) {
+    if(users[pin]){
+      users[pin].blocked = false;
+      users[pin].paidUntil = new Date(new Date().setMonth(new Date().getMonth()+6)).toISOString();
+      users[pin].paidNoticeSent = false;
+      localStorage.setItem('users', JSON.stringify(users));
+      populateUserTable();
+      populateBlockedUsers();
+      sendPaymentGoodMessage(pin);
+      alert(`User ${pin} amerudisha huduma kwa miezi 6!`);
+    }
+  }
+
+  function sendPaymentGoodMessage(pin) {
+    chatMessages.push({sender:'admin', message:'Asante kwa malipo yako, huduma zimefunguliwa kwa miezi 6!', to:pin, timestamp:new Date().toISOString()});
+    localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
+  }
+
+  function showPaymentMessageUser() {
+    let u = users[currentUser];
+    if(!u) return;
+    let msg = "";
+    if(u.blocked) {
+      msg = "Akaunti imefungwa. Lipia TZS 5,000 kwa namba 0772575860 ili kufungua huduma.";
+    } else {
+      let now = new Date();
+      let freeUntil = new Date(u.freeUntil);
+      let paidUntil = u.paidUntil ? new Date(u.paidUntil) : null;
+      if(paidUntil && now <= paidUntil) {
+        msg = `Huduma zako zinapatikana hadi ${paidUntil.toDateString()}.`;
+      } else if(now <= freeUntil) {
+        msg = `Una miezi 2 bure hadi ${freeUntil.toDateString()}.`;
+      } else {
+        msg = "Muda wa bure umeisha, lipia huduma.";
+      }
+    }
+    document.getElementById('user-payment-message').textContent = msg;
+  }
+
+  function saveAnnouncement() {
+    let txt = document.getElementById('announce-box').value.trim();
+    let msg = document.getElementById('announce-msg');
+    msg.textContent = "";
+    if(!txt) {
+      msg.style.color = 'red';
+      msg.textContent = 'Andika tangazo kwanza.';
+      return;
+    }
+    announcement = txt;
+    localStorage.setItem('announcement', announcement);
+    document.getElementById('global-announcement').textContent = announcement;
+    msg.style.color = 'green';
+    msg.textContent = 'Tangazo limehifadhiwa.';
+    userShowAnnouncement();
+  }
+  function loadAnnouncementAdmin() {
+    document.getElementById('announce-box').value = announcement;
+  }
+  function userShowAnnouncement() {
+    document.getElementById('user-announcement').textContent = announcement;
+  }
+
+  // Get drug image by drug name automatically
+  function getDrugImage(jina) {
+    const images = {
+      "Tangawizi": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Zingiber_officinale_2.JPG/120px-Zingiber_officinale_2.JPG",
+      "Mshubiri": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Dendrosicyos_socotranus_leaves.JPG/120px-Dendrosicyos_socotranus_leaves.JPG",
+      "Neem": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Azadirachta_indica_-_Neem_tree.JPG/120px-Azadirachta_indica_-_Neem_tree.JPG",
+      // Add images here for other drugs as needed
+    };
+    return images[jina] || "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Herbalist_%28PSF%29-1.JPG/120px-Herbalist_%28PSF%29-1.JPG";
+  }
+
+  function populateDrugList() {
+    const list = document.getElementById('drug-list');
+    list.innerHTML = '';
+    if(drugs.length === 0) {
+      list.innerHTML = '<i>Hakuna dawa kwenye orodha.</i>';
+      return;
+    }
+    drugs.forEach((d,i) => {
+      let img = getDrugImage(d.jina);
+      list.innerHTML += `<div>
+        <strong>${i+1}. ${d.jina}</strong><br/>
+        <img src="${img}" alt="${d.jina}" class="drug-thumb" /><br/>
+        Ugonjwa: ${d.magonjwa}<br/>
+        Kiungo: ${d.kiungo}<br/>
+        Jinsi ya Kuandaa: ${d.jinsi_ya_kuandaa}<br/>
+        Matumizi: ${d.matumizi}<br/>
+        Maelezo: ${d.maelezo}<br/>
+        <button onclick="deleteDrug(${i})" style="background:#c62828;color:#fff;border:none;padding:0.4rem 0.8rem;border-radius:10px;cursor:pointer;margin-top:0.3rem;">Futa Dawa</button>
+      </div><hr/>`;
+    });
+    document.getElementById('drug-count').textContent = drugs.length;
+  }
+
+  function deleteDrug(index) {
+    if(index >= 0 && index < drugs.length) {
+      if(confirm(`Unataka kufuta dawa "${drugs[index].jina}"?`)) {
+        drugs.splice(index,1);
+        localStorage.setItem('drugs', JSON.stringify(drugs));
+        populateDrugList();
+        alert('Dawa imefutwa.');
+      }
+    }
+  }
+
+  function addBulkMedicines() {
+    let box = document.getElementById('bulk-medicine-box');
+    let addMsg = document.getElementById('add-msg');
+    addMsg.textContent = "";
+    let lines = box.value.trim().split('\n').filter(l => l);
+    let added = 0, errors = [];
+    for(let i=0; i<lines.length; i++) {
+      let parts = lines[i].split('|');
+      if(parts.length !== 6) {
+        errors.push(`Mistari ${i+1} hayajakamilika.`);
+        continue;
+      }
+      let [jina, ugonjwa, kiungo, jinsi_ya_kuandaa, matumizi, maelezo] = parts.map(p => p.trim());
+      // check duplicates by same name AND description to avoid redundance
+      let exists = drugs.findIndex(d => d.jina.toLowerCase() === jina.toLowerCase() && d.maelezo.toLowerCase() === maelezo.toLowerCase());
+      if(exists !== -1) {
+        errors.push(`Dawa "${jina}" yenye maelezo hayo ipo tayari.`);
+        continue;
+      }
+      drugs.push({jina, magonjwa: ugonjwa, kiungo, jinsi_ya_kuandaa, matumizi, maelezo});
+      added++;
+    }
+    localStorage.setItem('drugs', JSON.stringify(drugs));
+    populateDrugList();
+    if(errors.length > 0) {
+      addMsg.style.color = 'orange';
+      addMsg.innerHTML = `Dawa ${added} zimeongezwa. Makosa:<br>${errors.join('<br>')}`;
+    } else {
+      addMsg.style.color = 'green';
+      addMsg.textContent = `Dawa ${added} zimeongezwa kikamilifu.`;
+    }
+    box.value = '';
+  }
+
+  function userSearch() {
+    const q = document.getElementById('user-search').value.trim().toLowerCase();
+    const results = document.getElementById('search-results');
+    if(!q) {
+      results.textContent = 'Tafadhali andika jina la dawa au ugonjwa.';
+      return;
+    }
+    let matches = drugs.filter(d => d.jina.toLowerCase().includes(q) || d.magonjwa.toLowerCase().includes(q));
+    if(matches.length === 0) {
+      results.textContent = 'Hakuna dawa au ugonjwa unaolingana na utafutaji wako.';
+      return;
+    }
+    let text = '';
+    matches.forEach(d => {
+      text += `${d.jina}\nUgonjwa: ${d.magonjwa}\nKiungo: ${d.kiungo}\nJinsi ya Kuandaa: ${d.jinsi_ya_kuandaa}\nMatumizi: ${d.matumizi}\nMaelezo: ${d.maelezo}\n\n`;
+    });
+    results.textContent = text.trim();
+  }
+
+  function showAllDrugs() {
+    document.getElementById('user-search').value = 'orodha';
+    userSearch();
+  }
+
+  function populateBlockedUsers() {
+    let blocked = Object.values(users).filter(u => u.blocked);
+    let blockList = document.getElementById('blocked-users-list');
+    if(blocked.length === 0) {
+      blockList.innerHTML = '<i>Hakuna watumiaji walioblock.</i>';
+      return;
+    }
+    let html = '';
+    blocked.forEach(u => {
+      html += `<div class="block-user-item"><span>${u.pin} (${u.name})</span>
+        <div>
+          <button onclick="unblockUser('${u.pin}')">Fungua</button>
+          <button onclick="deleteUser('${u.pin}')">Futa</button>
+        </div>
+      </div>`;
+    });
+    blockList.innerHTML = html;
+  }
+
+  function deleteUser(pin) {
+    if(users[pin]){
+      delete users[pin];
+      localStorage.setItem('users', JSON.stringify(users));
+      populateBlockedUsers();
+      populateUserTable();
+    }
+  }
+
+  function loadChatGroup(divId) {
+    let div = document.getElementById(divId);
+    div.innerHTML = '';
+    chatMessages.forEach(msg => {
+      if(msg.to === 'all'){
+        let d = document.createElement('div');
+        let senderName = msg.sender === 'admin' ? 'Admin' : (users[msg.sender] ? `${users[msg.sender].name} (${users[msg.sender].phone})` : msg.sender);
+        d.className = msg.sender === 'admin' ? 'bot-msg' : 'user-msg';
+        d.textContent = `${senderName}: ${msg.message}`;
+        div.appendChild(d);
+      }
+    });
+    div.scrollTop = div.scrollHeight;
+  }
+  function sendChatMessage() {
+    let input = document.getElementById('chat-input');
+    let msg = input.value.trim();
+    if(!msg) return;
+    chatMessages.push({sender: currentUser, message: msg, to:'all', timestamp: new Date().toISOString()});
+    localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
+    loadChatGroup('chat-messages');
+    input.value = '';
+  }
+  function sendAdminChat() {
+    let input = document.getElementById('admin-chat-input');
+    let msg = input.value.trim();
+    if(!msg) return;
+    chatMessages.push({sender: 'admin', message: msg, to:'all', timestamp: new Date().toISOString()});
+    localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
+    loadChatGroup('admin-chat-messages');
+    input.value = '';
+  }
+  function populatePrivateChatUsers() {
+    let select = document.getElementById('private-chat-user-list');
+    select.innerHTML = '';
+    Object.values(users).forEach(u => {
+      let opt = document.createElement('option');
+      opt.value = u.pin;
+      opt.text = `${u.name} (${u.phone})`;
+      select.add(opt);
+    });
+    currentPrivateChatUser = null;
+    document.getElementById('private-chat-messages').innerHTML = '';
+    document.getElementById('private-chat-input').value = '';
+  }
+  function startPrivateChat(pin) {
+    document.getElementById('private-chat-user-list').value = pin;
+    loadPrivateChat();
+  }
+  function loadPrivateChat() {
+    let pin = document.getElementById('private-chat-user-list').value;
+    currentPrivateChatUser = pin;
+    let div = document.getElementById('private-chat-messages');
+    div.innerHTML = '';
+    chatMessages.forEach(msg => {
+      if((msg.sender === 'admin' && msg.to === pin) || (msg.sender === pin && msg.to === 'admin')){
+        let d = document.createElement('div');
+        let senderName = msg.sender === 'admin' ? 'Admin' : (users[msg.sender] ? `${users[msg.sender].name} (${users[msg.sender].phone})` : msg.sender);
+        d.className = msg.sender === 'admin' ? 'sender-admin' : 'sender-user';
+        d.textContent = `${senderName}: ${msg.message}`;
+        div.appendChild(d);
+      }
+    });
+    div.scrollTop = div.scrollHeight;
+  }
+  function sendPrivateChat() {
+    let userPin = document.getElementById('private-chat-user-list').value;
+    let msg = document.getElementById('private-chat-input').value.trim();
+    if(!msg || !userPin){
+      alert('Chagua mtumiaji na andika ujumbe.');
+      return;
+    }
+    chatMessages.push({sender: 'admin', message: msg, to: userPin, timestamp: new Date().toISOString()});
+    localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
+    loadPrivateChat();
+    document.getElementById('private-chat-input').value = '';
+  }
+
+  function updatePaymentNotice() {
+    let u = users[currentUser];
+    let advice = document.getElementById('payment-advice');
+    if(!u){
+      advice.style.display = 'none';
+      return;
+    }
+    let now = new Date();
+    let freeUntil = new Date(u.freeUntil);
+    let paidUntil = u.paidUntil ? new Date(u.paidUntil) : null;
+    if(u.blocked){
+      advice.textContent = 'Akaunti imefungwa, lipia 0772575860.';
+      advice.style.background = '#c62828';
+    } else if(paidUntil && now <= paidUntil){
+      advice.textContent = `Huduma zitaendelea hadi ${paidUntil.toDateString()}.`;
+      advice.style.background = '#2e7d32';
+    } else if(now <= freeUntil){
+      advice.textContent = `Una miezi 2 bure hadi ${freeUntil.toDateString()}.`;
+      advice.style.background = '#2e7d32';
+    } else {
+      advice.textContent = 'Muda wa bure umeisha, lipia 0772575860.';
+      advice.style.background = '#c62828';
+    }
+  }
+
+</script>
+
+</body>
+</html>
